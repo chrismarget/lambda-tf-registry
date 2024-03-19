@@ -22,8 +22,8 @@ data "aws_iam_policy_document" "registry_bucket" {
       type        = "*"
     }
   }
-
 }
+
 resource "aws_s3_bucket_policy" "my_bucket_policy" {
   bucket = aws_s3_bucket.registry.bucket
   policy = data.aws_iam_policy_document.registry_bucket.json

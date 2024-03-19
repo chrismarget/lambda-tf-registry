@@ -1,4 +1,4 @@
-package response
+package responders
 
 import (
 	"encoding/json"
@@ -12,9 +12,11 @@ import (
 	ierrors "github.com/chrismarget/lambda-tf-registry/src/errors"
 )
 
-var _ json.Marshaler = new(Download)
+var _ json.Marshaler = new(V1Download)
+var _ Responder = new(V1Download)
 
-type Download struct {
+type V1Download struct {
+	ItemMap       map[string]*dynamodb.AttributeValue
 	NamespaceType string
 	VersionOsArch string
 
@@ -26,7 +28,7 @@ type Download struct {
 	url       string
 }
 
-func (o *Download) MarshalJSON() ([]byte, error) {
+func (o *V1Download) MarshalJSON() ([]byte, error) {
 	voaParts := strings.Split(o.VersionOsArch, "/")
 	if len(voaParts) != 3 {
 		return nil, fmt.Errorf("VersionOsArch should have 3 parts, got: %q", o.VersionOsArch)
@@ -57,20 +59,12 @@ func (o *Download) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&s)
 }
 
-func (o *Download) Respond(itemMap map[string]*dynamodb.AttributeValue) (events.LambdaFunctionURLResponse, error) {
-	if o.NamespaceType == "" {
-		return events.LambdaFunctionURLResponse{}, errors.New("o.NamespaceType must not be empty")
+func (o *V1Download) Respond() (events.LambdaFunctionURLResponse, error) {
+	if o.ItemMap == nil {
+		return events.LambdaFunctionURLResponse{}, errors.New("o.ItemMap must not be nil")
 	}
 
-	if o.VersionOsArch == "" {
-		return events.LambdaFunctionURLResponse{}, errors.New("o.VersionOsArch must not be empty")
-	}
-
-	if itemMap == nil {
-		return events.LambdaFunctionURLResponse{}, errors.New("itemMap must not be nil")
-	}
-
-	err := o.loadItems(itemMap)
+	err := o.loadItems(o.ItemMap)
 	if err != nil {
 		return ierrors.IErr{
 			Err:  fmt.Errorf("failed while loading items - %w", err),
@@ -81,7 +75,7 @@ func (o *Download) Respond(itemMap map[string]*dynamodb.AttributeValue) (events.
 	data, err := json.Marshal(o)
 	if err != nil {
 		return ierrors.IErr{
-			Err:  fmt.Errorf("failed while marshaling response - %w", err),
+			Err:  fmt.Errorf("failed while marshaling responders - %w", err),
 			Code: http.StatusInternalServerError,
 		}.LambdaResponse()
 	}
@@ -92,7 +86,7 @@ func (o *Download) Respond(itemMap map[string]*dynamodb.AttributeValue) (events.
 	}, nil
 }
 
-func FetchMapItem(itemMap map[string]*dynamodb.AttributeValue, item string, target any) error {
+func fetchMapItem(itemMap map[string]*dynamodb.AttributeValue, item string, target any) error {
 	v, ok := itemMap[item]
 	if !ok {
 		return fmt.Errorf("item %q not found in map", item)
@@ -101,6 +95,8 @@ func FetchMapItem(itemMap map[string]*dynamodb.AttributeValue, item string, targ
 	switch t := target.(type) {
 	case *string:
 		*t = *v.S
+	case *json.RawMessage:
+		*t = json.RawMessage(*v.S)
 	default:
 		return fmt.Errorf("unhandled type: %T", t)
 	}
@@ -108,35 +104,35 @@ func FetchMapItem(itemMap map[string]*dynamodb.AttributeValue, item string, targ
 	return nil
 }
 
-func (o *Download) loadItems(itemMap map[string]*dynamodb.AttributeValue) error {
+func (o *V1Download) loadItems(itemMap map[string]*dynamodb.AttributeValue) error {
 	var err error
 
-	err = FetchMapItem(itemMap, "Keys", &o.keys)
+	err = fetchMapItem(itemMap, "Keys", &o.keys)
 	if err != nil {
 		return err
 	}
 
-	err = FetchMapItem(itemMap, "Protocols", &o.protocols)
+	err = fetchMapItem(itemMap, "Protocols", &o.protocols)
 	if err != nil {
 		return err
 	}
 
-	err = FetchMapItem(itemMap, "SHA", &o.sha)
+	err = fetchMapItem(itemMap, "SHA", &o.sha)
 	if err != nil {
 		return err
 	}
 
-	err = FetchMapItem(itemMap, "SHA_URL", &o.shaUrl)
+	err = fetchMapItem(itemMap, "SHA_URL", &o.shaUrl)
 	if err != nil {
 		return err
 	}
 
-	err = FetchMapItem(itemMap, "Sig_URL", &o.sigUrl)
+	err = fetchMapItem(itemMap, "Sig_URL", &o.sigUrl)
 	if err != nil {
 		return err
 	}
 
-	err = FetchMapItem(itemMap, "URL", &o.url)
+	err = fetchMapItem(itemMap, "URL", &o.url)
 	if err != nil {
 		return err
 	}

@@ -92,6 +92,18 @@ locals {
       sha_url = "https://releases.hashicorp.com/terraform-provider-tls/4.0.1/terraform-provider-tls_4.0.1_SHA256SUMS"
       sig_url = "https://releases.hashicorp.com/terraform-provider-tls/4.0.1/terraform-provider-tls_4.0.1_SHA256SUMS.72D7468F.sig"
     }
+    "4.0.5/linux/amd64" = {
+      sha     = "1a8ddba2b1550c5d02003ea5d6cdda2eef6870ece86c5619f33edd699c9dc14b"
+      url     = "https://releases.hashicorp.com/terraform-provider-tls/4.0.5/terraform-provider-tls_4.0.5_linux_amd64.zip"
+      sha_url = "https://releases.hashicorp.com/terraform-provider-tls/4.0.5/terraform-provider-tls_4.0.5_SHA256SUMS"
+      sig_url = "https://releases.hashicorp.com/terraform-provider-tls/4.0.5/terraform-provider-tls_4.0.5_SHA256SUMS.72D7468F.sig"
+    }
+    "4.0.5/linux/arm64" = {
+      sha     = "1e3bb505c000adb12cdf60af5b08f0ed68bc3955b0d4d4a126db5ca4d429eb4a"
+      url     = "https://releases.hashicorp.com/terraform-provider-tls/4.0.5/terraform-provider-tls_4.0.5_linux_arm64.zip"
+      sha_url = "https://releases.hashicorp.com/terraform-provider-tls/4.0.5/terraform-provider-tls_4.0.5_SHA256SUMS"
+      sig_url = "https://releases.hashicorp.com/terraform-provider-tls/4.0.5/terraform-provider-tls_4.0.5_SHA256SUMS.72D7468F.sig"
+    }
   }
 }
 

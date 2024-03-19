@@ -2,39 +2,22 @@ package main
 
 import (
 	"context"
-	"errors"
-
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/chrismarget/lambda-tf-registry/src/env"
-	"github.com/chrismarget/lambda-tf-registry/src/errors"
-	"github.com/chrismarget/lambda-tf-registry/src/url"
+	"github.com/chrismarget/lambda-tf-registry/src/handlers"
+	"log"
 )
 
-func HandleRequest(ctx context.Context, request events.LambdaFunctionURLRequest) (events.LambdaFunctionURLResponse, error) {
-	path, err := url.NewPathFromString(request.RawPath)
-	if err != nil {
-		var ie ierrors.IErr
-		if errors.As(err, &ie) {
-			return ie.LambdaResponse()
-		}
-		return events.LambdaFunctionURLResponse{}, err
-	}
+func HandleRequest(ctx context.Context, req events.LambdaFunctionURLRequest) (events.LambdaFunctionURLResponse, error) {
+	log.Println("enter HandleRequest")
+	log.Println("path is: ", req.RawPath)
 
-	sess, err := session.NewSessionWithOptions(session.Options{SharedConfigState: session.SharedConfigEnable})
-	if err != nil {
-		var ie ierrors.IErr
-		if errors.As(err, &ie) {
-			return ie.LambdaResponse()
-		}
-		return events.LambdaFunctionURLResponse{}, err
-	}
-
-	return path.HandleRequest(dynamodb.New(sess), env.ParseEnv())
+	h := handlers.NewHandlerFromPath(req.RawPath)
+	return h.Handle(ctx, req)
 }
 
 func main() {
+	log.Println("enter main")
 	lambda.Start(HandleRequest)
+	log.Println("exit main")
 }
