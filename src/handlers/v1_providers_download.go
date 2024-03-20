@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/chrismarget/lambda-tf-registry/src/env"
 	"github.com/chrismarget/lambda-tf-registry/src/responders"
+	"github.com/chrismarget/lambda-tf-registry/src/utils"
 	"net/http"
 	"strings"
 )
@@ -42,7 +43,7 @@ func (o V1ProviderDownloadHandler) Handle(ctx context.Context, req events.Lambda
 		return r.Respond()
 	}
 
-	client, err := ddbClient()
+	client, err := utils.DdbClient()
 	if err != nil {
 		r = responders.Error{Code: http.StatusInternalServerError, Err: err, Req: &req}
 		return r.Respond()

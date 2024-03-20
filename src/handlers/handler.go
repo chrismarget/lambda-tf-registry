@@ -12,6 +12,7 @@ import (
 const (
 	pathMatchWellKnown = "^/.well-known/"
 	pathMatchV1        = "^/v1/"
+	pathMatchRegister  = "^/register"
 )
 
 type Handler interface {
@@ -27,6 +28,9 @@ func NewHandlerFromPath(path string) Handler {
 	case regexp.MustCompile(pathMatchV1).MatchString(path):
 		log.Println("path matched: ", pathMatchV1)
 		return newV1Handler()
+		//case regexp.MustCompile(pathMatchRegister).MatchString(path):
+		//	log.Println("path matched: ", pathMatchRegister)
+		//	return newRegisterHandler()
 	}
 
 	log.Println("path matched: <none>")

@@ -2,26 +2,54 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/chrismarget/lambda-tf-registry/src/env"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"os"
 	"regexp"
 	"testing"
 )
 
 func TestHandleRequest(t *testing.T) {
+	//utils.unsafeAuthTestModeOK = true
+
 	ctx := context.Background()
+
+	err := os.Setenv(env.RegisterTokenName, "registry-uploader")
+	require.NoError(t, err)
+
+	type registerPayload struct {
+		Arch string `json:"arch"`
+		//DownloadUrl         string          `json:"download_url"`
+		//Os                  string          `json:"os"`
+		//Protocols           json.RawMessage `json:"protocols"`
+		//SigningKeys         json.RawMessage `json:"signing_keys"`
+		//Shasum              string          `json:"shasum"`
+		//ShasumsUrl          string          `json:"shasums_url"`
+		//ShasumsSignatureUrl string          `json:"shasums_signature_url"`
+		//Version             string          `json:"version"`
+		//Namespace           string          `json:"namespace"`
+		//Type                string          `json:"type"`
+	}
 
 	type testCase struct {
 		path    string
 		expErr  *regexp.Regexp
 		expJson string
+		payload *registerPayload
+		base64  bool
 	}
 
+	//keyBytes, err := os.ReadFile("../../../terraform/signing_key")
+	//keyBytes = []byte("{}")
+	//require.NoError(t, err)
+
 	testCases := map[string]testCase{
-		"service_discovery": {
+		"valid_service_discovery": {
 			path:    "/.well-known/terraform.json",
-			expJson: `{"modules.v1":"/v1/modules","providers.v1":"/v1/providers"}`,
+			expJson: `{"modules.v1":"/v1/modules/","providers.v1":"/v1/providers/"}`,
 		},
 		"valid_download": {
 			path:    "/v1/providers/hashicorp/tls/4.0.1/download/linux/amd64",
@@ -29,14 +57,28 @@ func TestHandleRequest(t *testing.T) {
 		},
 		"valid_versions": {
 			path:    "/v1/providers/hashicorp/tls/versions",
-			expJson: `{"id":"hashicorp/tls","versions":[{"version":"4.0.1","protocols":["5.0"],"platforms":[{"os":"darwin","arch":"amd64"},{"os":"darwin","arch":"arm64"},{"os":"freebsd","arch":"386"},{"os":"freebsd","arch":"amd64"},{"os":"freebsd","arch":"arm"},{"os":"linux","arch":"386"},{"os":"linux","arch":"amd64"},{"os":"linux","arch":"arm"},{"os":"linux","arch":"arm64"},{"os":"windows","arch":"386"},{"os":"windows","arch":"amd64"}]}]}`,
+			expJson: `{"id":"hashicorp/tls","versions":[{"version":"4.0.1","protocols":["5.0"],"platforms":[{"os":"darwin","arch":"amd64"},{"os":"darwin","arch":"arm64"},{"os":"freebsd","arch":"386"},{"os":"freebsd","arch":"amd64"},{"os":"freebsd","arch":"arm"},{"os":"linux","arch":"386"},{"os":"linux","arch":"amd64"},{"os":"linux","arch":"arm"},{"os":"linux","arch":"arm64"},{"os":"windows","arch":"386"},{"os":"windows","arch":"amd64"}]},{"version":"4.0.5","protocols":["5.0"],"platforms":[{"os":"linux","arch":"amd64"},{"os":"linux","arch":"arm64"}]}]}`,
+			//expJson: `{"id":"hashicorp/tls","versions":[{"version":"4.0.1","protocols":["5.0"],"platforms":[{"os":"darwin","arch":"amd64"},{"os":"darwin","arch":"arm64"},{"os":"freebsd","arch":"386"},{"os":"freebsd","arch":"amd64"},{"os":"freebsd","arch":"arm"},{"os":"linux","arch":"386"},{"os":"linux","arch":"amd64"},{"os":"linux","arch":"arm"},{"os":"linux","arch":"arm64"},{"os":"windows","arch":"386"},{"os":"windows","arch":"amd64"}]}]}`,
 		},
+		//"valid_register_provider": {
+		//	path: "/register/provider",
+		//	payload: &registerPayload{
+		//		Arch: "amd64",
+		//	},
+		//},
 	}
 
 	for tName, tCase := range testCases {
 		t.Run(tName, func(t *testing.T) {
 			event := events.LambdaFunctionURLRequest{
 				RawPath: tCase.path,
+			}
+			if tCase.payload != nil {
+				var err error
+				b, err := json.Marshal(*tCase.payload)
+				require.NoError(t, err)
+
+				event.Body = string(b)
 			}
 
 			resp, err := HandleRequest(ctx, event)

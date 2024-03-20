@@ -41,12 +41,13 @@ resource "aws_lambda_function" "registry" {
   handler       = "registry"
   architectures = ["arm64"]
   depends_on    = [terraform_data.build_lambda]
-#  publish       = true
+  #  publish       = true
 
   environment {
     variables = {
       DEBUG               = "1"
       PROVIDER_TABLE_NAME = aws_dynamodb_table.registry_providers.name
+      REGISTER_TOKEN      = aws_secretsmanager_secret.registry_uploader.name
     }
   }
 
@@ -56,9 +57,9 @@ resource "aws_lambda_function" "registry" {
 }
 
 resource "aws_lambda_permission" "registry_url" {
-  function_name = aws_lambda_function.registry.function_name
-  action        = "lambda:InvokeFunctionUrl"
-  principal     = "*"
+  function_name          = aws_lambda_function.registry.function_name
+  action                 = "lambda:InvokeFunctionUrl"
+  principal              = "*"
   function_url_auth_type = "NONE"
   lifecycle {
     replace_triggered_by = [aws_lambda_function.registry]

@@ -7,7 +7,10 @@ import (
 
 const (
 	Debug             = "DEBUG"
+	LambdaVar         = "LAMBDA_TASK_ROOT"
+	TestAuthToken     = "TEST_AUTH_TOKEN"
 	ProviderTableName = "PROVIDER_TABLE_NAME"
+	RegisterTokenName = "REGISTER_TOKEN"
 )
 
 var defaults = map[string]string{

@@ -37,6 +37,12 @@ data "aws_iam_policy_document" "registry_role" {
       aws_dynamodb_table.registry_providers.arn,
     ]
   }
+
+  statement {
+    effect = "Allow"
+    actions = ["secretsmanager:GetSecretValue"]
+    resources = [ aws_secretsmanager_secret.registry_uploader.arn ]
+  }
 }
 
 // arn:aws:dynamodb:us-east-1:086704128018:table/registry-providers
