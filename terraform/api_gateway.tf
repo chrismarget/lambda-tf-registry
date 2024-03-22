@@ -48,11 +48,6 @@ resource "aws_apigatewayv2_route" "v1" {
   target    = "integrations/${aws_apigatewayv2_integration.registry.id}"
 }
 
-output "base_url" {
-  description = "Base URL for API Gateway stage."
-  value       = aws_apigatewayv2_stage.all.invoke_url
-}
-
 resource "aws_apigatewayv2_domain_name" "tf_registry_click" {
   domain_name = data.aws_route53_zone.tf_registry_click.name
 

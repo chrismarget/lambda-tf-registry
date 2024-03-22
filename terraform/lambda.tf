@@ -46,9 +46,8 @@ resource "aws_lambda_function" "registry" {
 
   environment {
     variables = {
-      DEBUG               = "1"
+#      DEBUG               = "1"
       PROVIDER_TABLE_NAME = aws_dynamodb_table.registry_providers.name
-      REGISTER_TOKEN      = aws_secretsmanager_secret.registry_uploader.name
     }
   }
 
@@ -77,5 +76,3 @@ resource "aws_lambda_function_url" "registry" {
   authorization_type = "NONE"
   function_name      = aws_lambda_function.registry.function_name
 }
-
-output "url" { value = "${aws_lambda_function_url.registry.function_url}v1/providers/hashicorp/tls/4.0.1/download/linux/amd64" }
