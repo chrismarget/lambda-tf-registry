@@ -17,18 +17,6 @@ resource "aws_iam_role" "registry" {
 }
 
 data "aws_iam_policy_document" "dynamodb" {
-#  statement {
-#    effect    = "Allow"
-#    actions   = ["logs:CreateLogGroup"]
-#    resources = ["arn:aws:logs:${data.aws_region.ours.id}:${data.aws_caller_identity.ours.id}:*"]
-#  }
-#
-#  statement {
-#    effect    = "Allow"
-#    actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
-#    resources = ["arn:aws:logs:${data.aws_region.ours.id}:${data.aws_caller_identity.ours.id}:log-group:/aws/lambda/${aws_lambda_function.registry.function_name}:*"]
-#  }
-
   statement {
     effect    = "Allow"
     actions   = ["dynamodb:GetItem", "dynamodb:Query"]
@@ -37,16 +25,7 @@ data "aws_iam_policy_document" "dynamodb" {
       aws_dynamodb_table.registry_providers.arn,
     ]
   }
-
-#  statement {
-#    effect = "Allow"
-#    actions = ["secretsmanager:GetSecretValue"]
-#    resources = [ aws_secretsmanager_secret.registry_uploader.arn ]
-#  }
 }
-
-// arn:aws:dynamodb:us-east-1:086704128018:table/registry-providers
-// arn:aws:dynamodb:us-east-1:086704128018:table/registry-providers
 
 resource "aws_iam_policy" "read_dynamodb" {
   name   = "terraform_registry"
