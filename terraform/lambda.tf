@@ -64,15 +64,6 @@ resource "aws_lambda_permission" "registry_url" {
   lifecycle { replace_triggered_by = [aws_lambda_function.registry] }
 }
 
-#resource "aws_lambda_permission" "api_gateway_a" {
-#  function_name = aws_lambda_function.registry.function_name
-#  action        = "lambda:InvokeFunction"
-#  principal     = "apigateway.amazonaws.com"
-#  source_arn = "${aws_apigatewayv2_api.registry.execution_arn}/*/"
-#
-#  lifecycle { replace_triggered_by = [aws_lambda_function.registry] }
-#}
-#
 resource "aws_lambda_permission" "api_gateway_b" {
   function_name = aws_lambda_function.registry.function_name
   action        = "lambda:InvokeFunction"
@@ -81,25 +72,6 @@ resource "aws_lambda_permission" "api_gateway_b" {
 
   lifecycle { replace_triggered_by = [aws_lambda_function.registry] }
 }
-#
-#resource "aws_lambda_permission" "api_gateway_c" {
-#  function_name = aws_lambda_function.registry.function_name
-#  action        = "lambda:InvokeFunction"
-#  principal     = "apigateway.amazonaws.com"
-#  source_arn = "${aws_apigatewayv2_api.registry.execution_arn}/*/*/"
-#
-#  lifecycle { replace_triggered_by = [aws_lambda_function.registry] }
-#}
-#
-#resource "aws_lambda_permission" "api_gateway_d" {
-#  function_name = aws_lambda_function.registry.function_name
-#  action        = "lambda:InvokeFunction"
-#  principal     = "apigateway.amazonaws.com"
-#  source_arn = "${aws_apigatewayv2_api.registry.execution_arn}/*/*/*"
-#
-#  lifecycle { replace_triggered_by = [aws_lambda_function.registry] }
-#}
-
 
 resource "aws_lambda_function_url" "registry" {
   authorization_type = "NONE"
