@@ -19,8 +19,9 @@ resource "terraform_data" "build_lambda" {
   provisioner "local-exec" {
     command = "printenv > /tmp/pe; go build -o ${local.tmp_dir}/bootstrap ${local.src_dir}/cmd/registry/main.go"
     environment = {
-      GOOS   = "linux"
-      GOARCH = "arm64"
+      CGO_ENABLED = "0"
+      GOOS        = "linux"
+      GOARCH      = "arm64"
       #      LDFLAGS = "-X github.com/chrismarget/lambda/internal.envProviderTableName="
     }
   }
@@ -51,9 +52,7 @@ resource "aws_lambda_function" "registry" {
     }
   }
 
-  lifecycle {
-    replace_triggered_by = [terraform_data.build_lambda]
-  }
+  lifecycle { replace_triggered_by = [terraform_data.build_lambda] }
 }
 
 resource "aws_lambda_permission" "registry_url" {
@@ -61,10 +60,46 @@ resource "aws_lambda_permission" "registry_url" {
   action                 = "lambda:InvokeFunctionUrl"
   principal              = "*"
   function_url_auth_type = "NONE"
-  lifecycle {
-    replace_triggered_by = [aws_lambda_function.registry]
-  }
+
+  lifecycle { replace_triggered_by = [aws_lambda_function.registry] }
 }
+
+#resource "aws_lambda_permission" "api_gateway_a" {
+#  function_name = aws_lambda_function.registry.function_name
+#  action        = "lambda:InvokeFunction"
+#  principal     = "apigateway.amazonaws.com"
+#  source_arn = "${aws_apigatewayv2_api.registry.execution_arn}/*/"
+#
+#  lifecycle { replace_triggered_by = [aws_lambda_function.registry] }
+#}
+#
+resource "aws_lambda_permission" "api_gateway_b" {
+  function_name = aws_lambda_function.registry.function_name
+  action        = "lambda:InvokeFunction"
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.registry.execution_arn}/*/*"
+
+  lifecycle { replace_triggered_by = [aws_lambda_function.registry] }
+}
+#
+#resource "aws_lambda_permission" "api_gateway_c" {
+#  function_name = aws_lambda_function.registry.function_name
+#  action        = "lambda:InvokeFunction"
+#  principal     = "apigateway.amazonaws.com"
+#  source_arn = "${aws_apigatewayv2_api.registry.execution_arn}/*/*/"
+#
+#  lifecycle { replace_triggered_by = [aws_lambda_function.registry] }
+#}
+#
+#resource "aws_lambda_permission" "api_gateway_d" {
+#  function_name = aws_lambda_function.registry.function_name
+#  action        = "lambda:InvokeFunction"
+#  principal     = "apigateway.amazonaws.com"
+#  source_arn = "${aws_apigatewayv2_api.registry.execution_arn}/*/*/*"
+#
+#  lifecycle { replace_triggered_by = [aws_lambda_function.registry] }
+#}
+
 
 resource "aws_lambda_function_url" "registry" {
   authorization_type = "NONE"

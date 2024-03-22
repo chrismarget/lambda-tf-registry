@@ -1,23 +1,24 @@
 package main
 
 import (
-	"context"
-	"github.com/aws/aws-lambda-go/events"
+	"github.com/aquasecurity/lmdrouter"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/chrismarget/lambda-tf-registry/src/handlers"
-	"log"
+	"github.com/chrismarget/lambda-tf-registry/src/v1_handlers"
 )
 
-func HandleRequest(ctx context.Context, req events.LambdaFunctionURLRequest) (events.LambdaFunctionURLResponse, error) {
-	log.Println("enter HandleRequest")
-	log.Println("path is: ", req.RawPath)
+var router = lmdrouter.NewRouter("")
 
-	h := handlers.NewHandlerFromPath(req.RawPath)
-	return h.Handle(ctx, req)
+func init() {
+	serviceDiscoveryMap := map[string]string{
+		"v1.providers": "/v1/providers/",
+		//"v1.modules":   "/v1/modules/",
+	}
+
+	v1handlers.NewServiceDiscoveryHandler(serviceDiscoveryMap).AddRoutes(router)
+	v1handlers.NewProviderDownloadHandler().AddRoutes(router)
+	v1handlers.NewProviderVersionsHandler().AddRoutes(router)
 }
 
 func main() {
-	log.Println("enter main")
-	lambda.Start(HandleRequest)
-	log.Println("exit main")
+	lambda.Start(router.Handler)
 }
