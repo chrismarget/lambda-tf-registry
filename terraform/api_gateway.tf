@@ -36,6 +36,12 @@ resource "aws_apigatewayv2_integration" "registry" {
   integration_uri    = aws_lambda_function.registry.invoke_arn
 }
 
+#resource "aws_apigatewayv2_route" "default" {
+#  api_id = aws_apigatewayv2_api.registry.id
+#  route_key = "$default"
+#  target    = "integrations/${aws_apigatewayv2_integration.registry.id}"
+#}
+
 resource "aws_apigatewayv2_route" "well_known" {
   api_id = aws_apigatewayv2_api.registry.id
   route_key = "GET /.well-known/terraform.json"

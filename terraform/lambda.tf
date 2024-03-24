@@ -46,7 +46,7 @@ resource "aws_lambda_function" "registry" {
 
   environment {
     variables = {
-#      DEBUG               = "1"
+      DEBUG               = "1"
       PROVIDER_TABLE_NAME = aws_dynamodb_table.registry_providers.name
     }
   }

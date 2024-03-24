@@ -3,6 +3,8 @@ package v1handlers
 import (
 	"context"
 	"fmt"
+	"github.com/chrismarget/lambda-tf-registry/src/common/awsclients"
+	"log"
 	"net/http"
 	"strings"
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/chrismarget/lambda-tf-registry/src/common"
-	"github.com/chrismarget/lambda-tf-registry/src/v1_handlers/awsclients"
 	"github.com/chrismarget/lambda-tf-registry/src/v1_handlers/env"
 )
 
@@ -27,11 +28,12 @@ func (o ProviderDownloadHandler) AddRoutes(router *lmdrouter.Router) {
 	router.Route(http.MethodGet, providerDownloadPath, o.Handle)
 }
 
-func (o ProviderDownloadHandler) Handle(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	urlParts := strings.Split(strings.TrimLeft(request.Path, common.PathSep), common.PathSep)
+func (o ProviderDownloadHandler) Handle(_ context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	log.Printf("%s: %q\n", req.HTTPMethod, req.Path)
+	urlParts := strings.Split(strings.TrimLeft(req.Path, common.PathSep), common.PathSep)
 	if len(urlParts) != 8 {
 		hErr := httpError.FromPrivateError(
-			fmt.Errorf("expected URL to have 8 parts, got %q", request.Path),
+			fmt.Errorf("expected URL to have 8 parts, got %q", req.Path),
 			"unexpected URL path length",
 		)
 		return hErr.MarshalResponse()

@@ -10,8 +10,8 @@ var router = lmdrouter.NewRouter("")
 
 func init() {
 	serviceDiscoveryMap := map[string]string{
-		"v1.providers": "/v1/providers/",
-		//"v1.modules":   "/v1/modules/",
+		"providers.v1": "/v1/providers/",
+		//"modules.v1":   "/v1/modules/",
 	}
 
 	v1handlers.NewServiceDiscoveryHandler(serviceDiscoveryMap).AddRoutes(router)
