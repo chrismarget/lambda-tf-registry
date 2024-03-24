@@ -3,19 +3,18 @@ package v1handlers
 import (
 	"context"
 	"fmt"
-	"github.com/chrismarget/lambda-tf-registry/src/common/awsclients"
 	"log"
 	"net/http"
 	"strings"
-
-	httpError "github.com/chrismarget/lambda-tf-registry/src/error"
-	"github.com/chrismarget/lambda-tf-registry/src/v1_responses"
 
 	"github.com/aquasecurity/lmdrouter"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/chrismarget/lambda-tf-registry/src/common"
+	"github.com/chrismarget/lambda-tf-registry/src/common/awsclients"
+	httpError "github.com/chrismarget/lambda-tf-registry/src/error"
 	"github.com/chrismarget/lambda-tf-registry/src/v1_handlers/env"
+	"github.com/chrismarget/lambda-tf-registry/src/v1_responses"
 )
 
 const providerDownloadPath = "/v1/providers/[^/]+/[^/]+/[0-9.]+/download/[^/]+/[^/]+"

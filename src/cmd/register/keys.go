@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/ProtonMail/go-crypto/openpgp"
 	"log"
 	"os"
 	"path"
+
+	"github.com/ProtonMail/go-crypto/openpgp"
 )
 
 const (

@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/ProtonMail/go-crypto/openpgp"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/ProtonMail/go-crypto/openpgp"
 )
 
 const (

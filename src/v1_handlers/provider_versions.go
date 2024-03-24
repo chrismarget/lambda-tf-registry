@@ -3,7 +3,6 @@ package v1handlers
 import (
 	"context"
 	"fmt"
-	"github.com/chrismarget/lambda-tf-registry/src/common/awsclients"
 	"log"
 	"net/http"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/chrismarget/lambda-tf-registry/src/common"
+	"github.com/chrismarget/lambda-tf-registry/src/common/awsclients"
 	httpError "github.com/chrismarget/lambda-tf-registry/src/error"
 	"github.com/chrismarget/lambda-tf-registry/src/v1_handlers/env"
 	v1responses "github.com/chrismarget/lambda-tf-registry/src/v1_responses"

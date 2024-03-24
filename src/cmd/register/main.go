@@ -7,12 +7,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/chrismarget/lambda-tf-registry/src/common/awsclients"
 	"log"
 	"os"
 	"path"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/chrismarget/lambda-tf-registry/src/common/awsclients"
 )
 
 var (
