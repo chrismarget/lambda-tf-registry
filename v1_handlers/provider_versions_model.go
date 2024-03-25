@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
-	"github.com/chrismarget/lambda-tf-registry/src/common"
+	"github.com/chrismarget/lambda-tf-registry/common"
 )
 
 type ProviderVersionModel struct {

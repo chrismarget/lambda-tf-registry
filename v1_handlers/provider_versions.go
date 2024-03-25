@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/chrismarget/lambda-tf-registry/src/common"
-	"github.com/chrismarget/lambda-tf-registry/src/common/awsclients"
+	"github.com/chrismarget/lambda-tf-registry/common"
+	"github.com/chrismarget/lambda-tf-registry/common/awsclients"
 )
 
 const providerVersionsPath = "/v1/providers/[^/]+/[^/]+/versions"

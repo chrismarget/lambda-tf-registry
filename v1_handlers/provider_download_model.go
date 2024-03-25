@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/chrismarget/lambda-tf-registry/src/common"
+	"github.com/chrismarget/lambda-tf-registry/common"
 )
 
 var _ json.Marshaler = new(ProviderDownloadModel)

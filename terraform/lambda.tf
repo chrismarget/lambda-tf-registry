@@ -1,28 +1,34 @@
 locals {
-  src_dir = "${path.root}/../src"
+  repo_dir          = "${path.root}/.."
+  registry_main_dir = "${local.repo_dir}/cmd/registry"
+  registry_main_go  = "${local.registry_main_dir}/main.go"
+  all_src_dirs = [
+    local.registry_main_dir,
+    "${local.repo_dir}/common",
+    "${local.repo_dir}/v1_handlers",
+  ]
   tmp_dir = "${path.root}/../.temp"
-  #  PROVIDER_TABLE_NAME
 }
 
 # zip of the source tree is used to trigger lambda build when code is changed
 data "archive_file" "lambda_source" {
-  source_dir  = local.src_dir
-  output_path = "${local.tmp_dir}/lambda_src.zip"
+  for_each    = toset(local.all_src_dirs)
+  source_dir  = each.key
+  output_path = "${local.tmp_dir}/${replace(each.key, "/", "_")}.zip"
   type        = "zip"
 }
 
 resource "terraform_data" "build_lambda" {
   triggers_replace = {
-    src_hash = data.archive_file.lambda_source.output_sha256
+    for i in data.archive_file.lambda_source : i.source_dir => i.output_sha256
   }
 
   provisioner "local-exec" {
-    command = "printenv > /tmp/pe; go build -o ${local.tmp_dir}/bootstrap ${local.src_dir}/cmd/registry/main.go"
+    command = "go build -o ${local.tmp_dir}/bootstrap ${local.registry_main_go}"
     environment = {
       CGO_ENABLED = "0"
       GOOS        = "linux"
       GOARCH      = "arm64"
-      #      LDFLAGS = "-X github.com/chrismarget/lambda/internal.envProviderTableName="
     }
   }
 }

@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/aquasecurity/lmdrouter"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/chrismarget/lambda-tf-registry/src/v1_handlers"
+	"github.com/chrismarget/lambda-tf-registry/v1_handlers"
 )
 
 var router = lmdrouter.NewRouter("")
