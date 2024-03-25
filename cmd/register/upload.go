@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"sync"
@@ -18,21 +17,15 @@ import (
 	"github.com/chrismarget/lambda-tf-registry/common/awsclients"
 )
 
-type updateDbInput struct {
-	bucketName     string
-	namespaceType  string
-	keysBytes      json.RawMessage
-	protocolsBytes json.RawMessage
-	hashFileName   string
+type uploadFilesInput struct {
+	bucketName            string
+	keysBytes             json.RawMessage
+	protocolsBytes        json.RawMessage
+	hashFileName          string
+	fileHashesToFilePaths map[string]string
 }
 
-func updateDb(ctx context.Context, in updateDbInput) error {
-	// read the file with checksums of each provider binary
-	hashesToFilenames, err := hashes(in.hashFileName)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+func uploadFiles(ctx context.Context, in uploadFilesInput) error {
 	s3UploadManager, err := awsclients.S3Manager(ctx)
 	if err != nil {
 		return err
@@ -41,8 +34,7 @@ func updateDb(ctx context.Context, in updateDbInput) error {
 	wg := new(sync.WaitGroup)
 	errChan := make(chan error)
 
-	ufcfg := uploadFileIn{
-		ctx:     ctx,
+	ufcfg := uploadFileInput{
 		mgr:     s3UploadManager,
 		errChan: errChan,
 		bucket:  in.bucketName,
@@ -52,21 +44,21 @@ func updateDb(ctx context.Context, in updateDbInput) error {
 	ufcfg.localpath = in.hashFileName
 	ufcfg.remotepath = path.Base(in.hashFileName)
 	wg.Add(1)
-	go uploadFile(ufcfg)
+	go uploadFile(ctx, ufcfg)
 
 	// send the signature file
 	ufcfg.localpath = in.hashFileName + sigFileSuffix
 	ufcfg.remotepath = path.Base(in.hashFileName) + sigFileSuffix
 	wg.Add(1)
-	go uploadFile(ufcfg)
+	go uploadFile(ctx, ufcfg)
 
 	// send each provider zip file
-	for k, v := range hashesToFilenames {
+	for k, v := range in.fileHashesToFilePaths {
 		ufcfg.localpath = v
 		ufcfg.remotepath = path.Base(v)
 		ufcfg.hash = k
 		wg.Add(1)
-		go uploadFile(ufcfg)
+		go uploadFile(ctx, ufcfg)
 	}
 
 	go func() {
@@ -86,8 +78,7 @@ func updateDb(ctx context.Context, in updateDbInput) error {
 	return errs
 }
 
-type uploadFileIn struct {
-	ctx        context.Context
+type uploadFileInput struct {
 	mgr        *manager.Uploader
 	errChan    chan<- error
 	localpath  string
@@ -96,7 +87,7 @@ type uploadFileIn struct {
 	hash       string
 }
 
-func uploadFile(in uploadFileIn) {
+func uploadFile(ctx context.Context, in uploadFileInput) {
 	f, err := os.Open(in.localpath)
 	if err != nil {
 		in.errChan <- fmt.Errorf("failed to open %q for S3 upload - %w", in.localpath, err)
@@ -118,7 +109,7 @@ func uploadFile(in uploadFileIn) {
 		checksumSHA256 = &s2
 	}
 
-	_, err = in.mgr.Upload(in.ctx, &s3.PutObjectInput{
+	_, err = in.mgr.Upload(ctx, &s3.PutObjectInput{
 		Bucket:         &in.bucket,
 		Key:            aws.String(path.Base(in.localpath)),
 		Body:           f,
@@ -128,6 +119,7 @@ func uploadFile(in uploadFileIn) {
 		in.errChan <- fmt.Errorf("failed while uploading %q to s3://%s - %w", in.localpath, in.bucket, err)
 		return
 	}
+	fmt.Printf("%s delivered to s3://%s\n", path.Base(in.localpath), in.bucket)
 
 	in.errChan <- nil
 }

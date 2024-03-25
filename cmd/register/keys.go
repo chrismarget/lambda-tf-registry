@@ -59,13 +59,21 @@ func getKeys(dir string) (json.RawMessage, error) {
 		log.Fatal(err)
 	}
 
-	result := struct {
+	type resultKey struct {
 		KeyId      string `json:"key_id"`
 		AsciiArmor string `json:"ascii_armor"`
-	}{
-		KeyId:      keyId,
-		AsciiArmor: string(asciiArmor),
 	}
 
-	return json.Marshal(&result)
+	type result struct {
+		GpgPublicKeys []resultKey `json:"gpg_public_keys"`
+	}
+
+	return json.Marshal(&result{
+		GpgPublicKeys: []resultKey{
+			{
+				KeyId:      keyId,
+				AsciiArmor: string(asciiArmor),
+			},
+		},
+	})
 }
