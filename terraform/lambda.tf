@@ -77,8 +77,3 @@ resource "aws_lambda_permission" "api_gateway_b" {
 
   lifecycle { replace_triggered_by = [aws_lambda_function.registry] }
 }
-
-resource "aws_lambda_function_url" "registry" {
-  authorization_type = "NONE"
-  function_name      = aws_lambda_function.registry.function_name
-}

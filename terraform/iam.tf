@@ -51,7 +51,7 @@ data "aws_iam_policy_document" "registry_uploader"{
   statement {
     effect = "Allow"
     actions = ["s3:PutObject"]
-    resources = ["${aws_s3_bucket.registry.arn}/*"]
+    resources = ["${data.aws_s3_bucket.registry.arn}/*"]
   }
 }
 

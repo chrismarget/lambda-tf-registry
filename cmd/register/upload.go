@@ -19,13 +19,11 @@ import (
 )
 
 type updateDbInput struct {
-	bucketName        string
-	namespaceType     string
-	keysBytes         json.RawMessage
-	protocolsBytes    json.RawMessage
-	hashFileName      string
-	hashesToFilenames map[string]string
-	wg                *sync.WaitGroup
+	bucketName     string
+	namespaceType  string
+	keysBytes      json.RawMessage
+	protocolsBytes json.RawMessage
+	hashFileName   string
 }
 
 func updateDb(ctx context.Context, in updateDbInput) error {
@@ -34,7 +32,6 @@ func updateDb(ctx context.Context, in updateDbInput) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_ = hashesToFilenames
 
 	s3UploadManager, err := awsclients.S3Manager(ctx)
 	if err != nil {
@@ -49,7 +46,6 @@ func updateDb(ctx context.Context, in updateDbInput) error {
 		mgr:     s3UploadManager,
 		errChan: errChan,
 		bucket:  in.bucketName,
-		wg:      wg,
 	}
 
 	// send the hash file
@@ -65,23 +61,13 @@ func updateDb(ctx context.Context, in updateDbInput) error {
 	go uploadFile(ufcfg)
 
 	// send each provider zip file
-	for k, v := range in.hashesToFilenames {
+	for k, v := range hashesToFilenames {
 		ufcfg.localpath = v
 		ufcfg.remotepath = path.Base(v)
-		wg.Add(1)
 		ufcfg.hash = k
+		wg.Add(1)
 		go uploadFile(ufcfg)
 	}
-
-	//err = uploadSharedObjects(ctx, in.hashFileName)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-
-	//err = uploadProviderFiles(ctx, hashesToFilenames)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
 
 	go func() {
 		wg.Wait()
@@ -94,6 +80,7 @@ func updateDb(ctx context.Context, in updateDbInput) error {
 		if err != nil {
 			errs = errors.Join(errs, err)
 		}
+		wg.Done()
 	}
 
 	return errs
@@ -107,7 +94,6 @@ type uploadFileIn struct {
 	remotepath string
 	bucket     string
 	hash       string
-	wg         *sync.WaitGroup
 }
 
 func uploadFile(in uploadFileIn) {
@@ -144,5 +130,4 @@ func uploadFile(in uploadFileIn) {
 	}
 
 	in.errChan <- nil
-	in.wg.Done()
 }
