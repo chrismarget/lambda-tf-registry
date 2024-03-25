@@ -2,20 +2,15 @@ package v1handlers
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/aquasecurity/lmdrouter"
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/chrismarget/lambda-tf-registry/src/common"
 	"github.com/chrismarget/lambda-tf-registry/src/common/awsclients"
-	httpError "github.com/chrismarget/lambda-tf-registry/src/error"
-	"github.com/chrismarget/lambda-tf-registry/src/v1_handlers/env"
-	v1responses "github.com/chrismarget/lambda-tf-registry/src/v1_responses"
 )
 
 const providerVersionsPath = "/v1/providers/[^/]+/[^/]+/versions"
@@ -28,66 +23,58 @@ func (o ProviderVersionsHandler) AddRoutes(router *lmdrouter.Router) {
 	router.Route(http.MethodGet, providerVersionsPath, o.Handle)
 }
 
-func (o ProviderVersionsHandler) Handle(_ context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func (o ProviderVersionsHandler) Handle(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	log.Printf("%s: %q\n", req.HTTPMethod, req.Path)
-	urlParts := strings.Split(strings.TrimLeft(req.Path, common.PathSep), common.PathSep)
-	if len(urlParts) != 5 {
-		hErr := httpError.FromPrivateError(
-			fmt.Errorf("expected URL to have 5 parts, got %q", req.Path),
-			"unexpected URL path length",
-		)
-		return hErr.MarshalResponse()
-	}
 
-	namespaceType := strings.Join(urlParts[2:4], common.PathSep)
-
-	tableName := env.Get(env.ProviderTableName)
+	tableName := common.Get(common.ProviderTableName)
 	if tableName == "" {
-		hErr := httpError.NewPublicError("cannot determine database table name")
+		hErr := common.NewPublicError("cannot determine database table name")
 		return hErr.MarshalResponse()
 	}
 
-	client, err := awsclients.DdbClient()
+	model, err := NewVersionsModelFromUrlPath(req.Path)
+	if tableName == "" {
+		hErr := common.FromPrivateError(err, "cannot determine database table name")
+		return hErr.MarshalResponse()
+	}
+
+	expr, err := model.KeyExpr()
 	if err != nil {
-		hErr := httpError.FromPrivateError(err, "cannot create database client")
+		hErr := common.FromPrivateError(err, "failed to build query")
 		return hErr.MarshalResponse()
 	}
 
-	keyCondition := expression.Key("NamespaceType").Equal(expression.Value(namespaceType))
-	projection := expression.NamesList(
-		expression.Name("VersionOsArch"),
-		expression.Name("Protocols"),
-	)
-	expr, err := expression.NewBuilder().
-		WithKeyCondition(keyCondition).
-		WithProjection(projection).
-		Build()
+	client, err := awsclients.DdbClient(ctx)
 	if err != nil {
-		hErr := httpError.FromPrivateError(err, "failed building database expression")
+		hErr := common.FromPrivateError(err, "cannot create database client")
 		return hErr.MarshalResponse()
 	}
 
-	queryOutput, err := client.Query(&dynamodb.QueryInput{
+	queryPaginator := dynamodb.NewQueryPaginator(client, &dynamodb.QueryInput{
+		TableName:                 &tableName,
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
 		KeyConditionExpression:    expr.KeyCondition(),
-		ProjectionExpression:      expr.Projection(),
-		TableName:                 &tableName,
 	})
-	if err != nil {
-		hErr := httpError.FromPrivateError(err, "failed querying database")
-		return hErr.MarshalResponse()
-	}
-	if len(queryOutput.Items) == 0 {
-		return lmdrouter.MarshalResponse(http.StatusNotFound, nil, nil)
+
+	for queryPaginator.HasMorePages() {
+		response, err := queryPaginator.NextPage(context.TODO())
+		if err != nil {
+			hErr := common.FromPrivateError(err, "failed querying database")
+			return hErr.MarshalResponse()
+		}
+
+		var providersPage []ProviderVersionModel
+		err = attributevalue.UnmarshalListOfMaps(response.Items, &providersPage)
+		if err != nil {
+			hErr := common.FromPrivateError(err, "failed unmarshaling database response")
+			return hErr.MarshalResponse()
+		}
+
+		model.Versions = append(model.Versions, providersPage...)
 	}
 
-	data := v1responses.Versions{
-		ItemMaps:      queryOutput.Items,
-		NamespaceType: namespaceType,
-	}
-
-	return lmdrouter.MarshalResponse(http.StatusOK, nil, &data)
+	return lmdrouter.MarshalResponse(http.StatusOK, nil, &model)
 }
 
 func NewProviderVersionsHandler() Handler {

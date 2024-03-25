@@ -7,11 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 )
 
-var awsV2Config *aws.Config
+var awsConfig *aws.Config
 
 func loadConfig(ctx context.Context) (*aws.Config, error) {
-	if awsV2Config != nil {
-		return awsV2Config, nil
+	if awsConfig != nil {
+		return awsConfig, nil
 	}
 
 	cfg, err := config.LoadDefaultConfig(ctx)
@@ -19,7 +19,7 @@ func loadConfig(ctx context.Context) (*aws.Config, error) {
 		return nil, err
 	}
 
-	awsV2Config = &cfg
+	awsConfig = &cfg
 
 	return &cfg, nil
 }

@@ -1,4 +1,4 @@
-package env
+package common
 
 import (
 	"os"
@@ -7,10 +7,7 @@ import (
 
 const (
 	Debug             = "DEBUG"
-	LambdaVar         = "LAMBDA_TASK_ROOT"
-	TestAuthToken     = "TEST_AUTH_TOKEN"
 	ProviderTableName = "PROVIDER_TABLE_NAME"
-	RegisterTokenName = "REGISTER_TOKEN"
 )
 
 var defaults = map[string]string{
@@ -18,7 +15,7 @@ var defaults = map[string]string{
 	ProviderTableName: "registry-providers",
 }
 
-type Env struct { // todo: make private
+type Env struct {
 	vars     map[string]string
 	boolVars map[string]bool
 }

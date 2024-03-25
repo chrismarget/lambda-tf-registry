@@ -1,12 +1,16 @@
 package awsclients
 
-import "github.com/aws/aws-sdk-go/service/dynamodb"
+import (
+	"context"
 
-func DdbClient() (*dynamodb.DynamoDB, error) {
-	session, err := getSession()
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+)
+
+func DdbClient(ctx context.Context) (*dynamodb.Client, error) {
+	cfg, err := loadConfig(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return dynamodb.New(session), nil
+	return dynamodb.NewFromConfig(*cfg), nil
 }

@@ -1,4 +1,4 @@
-package httpError
+package common
 
 import (
 	"encoding/json"
@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/chrismarget/lambda-tf-registry/src/v1_handlers/env"
 )
 
 var _ error = new(handlerError)
@@ -33,7 +32,7 @@ func (o *handlerError) SetHeaders(headers map[string]string) {
 
 func (o handlerError) MarshalResponse() (events.APIGatewayProxyResponse, error) {
 	message := json.RawMessage(o.errPublic.Error())
-	if env.GetBool(env.Debug) {
+	if GetBool(Debug) {
 		message = json.RawMessage(fmt.Sprintf(`{"public":%q,"private":%q}`, o.errPublic, o.errPrivate))
 	}
 
