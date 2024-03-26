@@ -12,8 +12,11 @@ import (
 	"github.com/chrismarget/lambda-tf-registry/common/awsclients"
 )
 
-// for filenames like: terraform-provider-jtaf6601c5cb4d3ca2a0_0.2.1_darwin_amd64.zip
 const (
+	// for filenames like: terraform-provider-jtaf660204634d3ca2a0_0.2.1_SHA256SUMS
+	reHashFileParser = "^terraform-provider-([^_]+)_([0-9]+.[0-9]+.[0-9]+)_SHA256SUMS$"
+
+	// for filenames like: terraform-provider-jtaf6601c5cb4d3ca2a0_0.2.1_darwin_amd64.zip
 	reZipFileParser1 = "^terraform-provider-([^_]+)_([0-9]+.[0-9]+.[0-9]+)_([^_]+)_([^_]+).zip$"
 	reZipFileParser2 = "^(terraform-provider-[^_]+_[0-9]+.[0-9]+.[0-9]+_)[^_]+_[^_]+.zip$"
 )
